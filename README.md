@@ -101,12 +101,14 @@ const context = await client.getContextString('src/auth.js');
 ```
 AI-systems-evolution   ← start here (rung 03: agent needs context)
     |
-    └─► Agent-Anatomy  ← hands organ: agent reads files
+    └─► agentic-patterns  ← Pattern 04 (graph-based agent context)
             |
-            └─► Agent-Context  ← THIS REPO (what to read, and how much)
+            └─► Agent-Context  ← THIS REPO (the runnable dependency graph)
 ```
 
-For the full orchestration stack that uses Graphify in production: see **agentkernel**.
+For the full orchestration stack that uses Graphify in production: see [agentkernel](https://github.com/shubham0086/agentkernel).
+
+**Theory companion:** [Pattern 04: GraphDB for Agent Context](https://github.com/shubham0086/agentic-patterns/blob/main/docs/04-graphdb-for-agent-context.md)
 
 ---
 
