@@ -100,6 +100,12 @@ const context = await client.getContextString('src/auth.js');
 
 ---
 
+## Security & Sandboxing (MCP)
+
+When exposing tool context to LLMs via Model Context Protocol (MCP) servers, validate query paths to mitigate injection risks:
+- **Normalizes Paths**: Ensures all paths are normalized (removing `../` sequences) before traversing dependencies.
+- **Enforces Sandboxing**: Matches files against an allowlisted workspace root sandbox to prevent path traversal (CVE-2025-53110) or symlink bypasses (CVE-2025-53109).
+
 ## Where This Fits
 
 ```
