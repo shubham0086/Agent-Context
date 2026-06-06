@@ -1,8 +1,12 @@
 # Agent-Context
 
+> **IMPORTANT**: This repository contains real, production-ready, battle-tested code extracted directly from active commercial systems (like Agency OS or Founder Growth OS), rather than simplified mock learning artifacts.
+>
+> For project walkthroughs, architecture flowcharts, and system context, visit the live landing page: [shubham0086.github.io/MyPortfolio.github.io/projects/agent-context.html](https://shubham0086.github.io/MyPortfolio.github.io/projects/agent-context.html)
+
 **Give your agent the 200 tokens it needs about your codebase, not 8,000 tokens of noise.**
 
-Agent-Context walks any project, builds a dependency graph, and tells an agent exactly which files depend on a given file and which files it depends on. The blast radius. Compact enough to fit in a prompt.
+Agent-Context walks any project, builds a dependency graph, and tells an agent exactly which files depend on a given file and which files it depends on. The blast radius, compact enough to fit in a prompt.
 
 Extracted from 18 months of production Agency OS.
 
