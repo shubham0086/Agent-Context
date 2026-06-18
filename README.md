@@ -2,7 +2,7 @@
 
 > **IMPORTANT**: This repository contains real, production-ready, battle-tested code extracted directly from active commercial systems (like Agency OS or Founder Growth OS), rather than simplified mock learning artifacts.
 >
-> For project walkthroughs, architecture flowcharts, and system context, visit the live landing page: [shubham0086.github.io/MyPortfolio.github.io/projects/agent-context.html](https://shubham0086.github.io/MyPortfolio.github.io/projects/agent-context.html)
+> For project walkthroughs, architecture flowcharts, and system context, visit the live landing page: [my-portfolio-github-io-beta-five.vercel.app/projects/agent-context.html](https://my-portfolio-github-io-beta-five.vercel.app/projects/agent-context.html)
 
 **Give your agent the 200 tokens it needs about your codebase, not 8,000 tokens of noise.**
 
@@ -125,7 +125,7 @@ For the full orchestration stack that uses Graphify in production: see [agentker
 <div align="center">
 
 Built by [Shubham Prajapati](https://github.com/shubham0086) ·
-[Portfolio](https://shubham0086.github.io/MyPortfolio.github.io/)
+[Portfolio](https://my-portfolio-github-io-beta-five.vercel.app/)
 · MIT
 
 Extracted from 18 months of production Agency OS.
