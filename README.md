@@ -12,7 +12,7 @@ Extracted from 18 months of production Agency OS.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/Node-18%2B-brightgreen.svg)](package.json)
-[![Zero dependencies](https://img.shields.io/badge/dependencies-zero-blue.svg)]()
+[![Core: zero deps](https://img.shields.io/badge/core-zero%20deps-blue.svg)]()
 
 ---
 
@@ -30,6 +30,30 @@ node demo/blast-radius.js src/Graphify.js .
 ```
 
 No install needed. Zero external dependencies.
+
+---
+
+## MCP Server (use it from your AI IDE)
+
+Agent-Context also ships as an **MCP server**, so an AI IDE (Claude Code, Cursor) can call its
+blast radius directly. It exposes two tools:
+
+- `blast_radius(file, root?)` — the dependents and dependencies of a file
+- `graph_summary(root?)` — file/edge counts, to confirm the repo is analyzable
+
+This is the **code-graph spoke** of [The Machine OS](https://github.com/shubham0086/the-machine-os):
+the `/code-review` and `/tech-debt` skills call it to see what a change actually affects beyond
+the diff.
+
+```bash
+# Run the server (stdio)
+npx github:shubham0086/agent-context
+```
+
+The server adds one dependency, the official `@modelcontextprotocol/sdk` (the core
+`GraphifyClient` import stays dependency-free). It is **read-only** and confines analysis to the
+workspace: a per-call `root` cannot escape `GRAPHIFY_ROOT`/cwd, and each call is time-bounded
+(`GRAPHIFY_TIMEOUT_MS`, default 15s).
 
 ---
 
