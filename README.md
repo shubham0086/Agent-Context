@@ -38,22 +38,57 @@ No install needed. Zero external dependencies.
 Agent-Context also ships as an **MCP server**, so an AI IDE (Claude Code, Cursor) can call its
 blast radius directly. It exposes two tools:
 
-- `blast_radius(file, root?)` — the dependents and dependencies of a file
-- `graph_summary(root?)` — file/edge counts, to confirm the repo is analyzable
+- `blast_radius(file, root?)` : the dependents and dependencies of a file
+- `graph_summary(root?)` : file/edge counts, to confirm the repo is analyzable
 
-This is the **code-graph spoke** of [The Machine OS](https://github.com/shubham0086/the-machine-os):
+It is the **code-graph spoke** of [The Machine OS](https://github.com/shubham0086/the-machine-os):
 the `/code-review` and `/tech-debt` skills call it to see what a change actually affects beyond
 the diff.
 
+### Prerequisite
+
+[Node.js](https://nodejs.org) 18+ on your PATH (the server runs via `npx`). The server adds one
+dependency, the official `@modelcontextprotocol/sdk`; the core `GraphifyClient` import stays
+dependency-free.
+
+### Option A (recommended): install via The Machine OS plugin
+
+If you use Claude Code, you do not configure anything by hand. Install the tools plugin and the
+skills call this server automatically:
+
 ```bash
-# Run the server (stdio)
-npx github:shubham0086/agent-context
+/plugin marketplace add shubham0086/the-machine-os
+/plugin install ai-engineering-tools@machine-os
+/reload-plugins
 ```
 
-The server adds one dependency, the official `@modelcontextprotocol/sdk` (the core
-`GraphifyClient` import stays dependency-free). It is **read-only** and confines analysis to the
-workspace: a per-call `root` cannot escape `GRAPHIFY_ROOT`/cwd, and each call is time-bounded
-(`GRAPHIFY_TIMEOUT_MS`, default 15s).
+### Option B: wire it into any MCP client manually
+
+For Cursor or a standalone client, add this to your MCP config (for example
+`.cursor/mcp.json` or Claude Code's `mcp` settings):
+
+```json
+{
+  "mcpServers": {
+    "code-graph": {
+      "command": "npx",
+      "args": ["-y", "github:shubham0086/agent-context"]
+    }
+  }
+}
+```
+
+Or just run it directly over stdio to test:
+
+```bash
+npx -y github:shubham0086/agent-context
+```
+
+### Security
+
+The server is **read-only** and confines analysis to the workspace: a per-call `root` cannot
+escape `GRAPHIFY_ROOT`/cwd, and each call is time-bounded (`GRAPHIFY_TIMEOUT_MS`, default 15s).
+See [Security & Sandboxing](#security--sandboxing-mcp) below for the path-traversal defenses.
 
 ---
 
