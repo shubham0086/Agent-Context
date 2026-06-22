@@ -62,7 +62,23 @@ skills call this server automatically:
 /reload-plugins
 ```
 
-### Option B: wire it into any MCP client manually
+### Option B: install in Claude Desktop (one-click extension)
+
+Claude Desktop installs MCP servers as **`.mcpb` extensions** — no JSON editing. Build the
+bundle once with the [mcpb](https://github.com/anthropics/mcpb) packager, then install it:
+
+```bash
+npm install -g @anthropic-ai/mcpb   # one-time: the packager
+npm install --omit=dev              # production dep only (@modelcontextprotocol/sdk)
+mcpb pack                           # -> machine-os-code-graph.mcpb
+```
+
+In Claude Desktop: **Settings → Extensions → Install Extension →** pick the
+`.mcpb` file, then choose your **Workspace root** (the repo the tools may analyze). The
+`blast_radius` and `graph_summary` tools then appear to Claude. The workspace directory you
+pick is the security anchor — analysis is read-only and cannot escape it.
+
+### Option C: wire it into any MCP client manually
 
 For Cursor or a standalone client, add this to your MCP config (for example
 `.cursor/mcp.json` or Claude Code's `mcp` settings):

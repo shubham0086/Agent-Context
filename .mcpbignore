@@ -1,0 +1,17 @@
+# Files excluded from the .mcpb bundle (the server code + production node_modules ship; the rest does not)
+tests/
+demo/
+docs/
+.git/
+.github/
+.gitignore
+.mcpbignore
+*.mcpb
+dist/
+data/
+*.db
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

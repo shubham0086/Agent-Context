@@ -1,0 +1,58 @@
+{
+  "manifest_version": "0.2",
+  "name": "machine-os-code-graph",
+  "display_name": "Machine OS: Code Graph",
+  "version": "1.0.0",
+  "description": "Blast-radius and dependency-graph tools for your repos. Ask what depends on a file before you change it.",
+  "long_description": "The code-graph spoke of The Machine OS, packaged for one-click install in Claude Desktop. It walks a workspace you choose, builds a dependency graph, and exposes two read-only tools: blast_radius (the files that depend on a given file, plus the files it depends on) and graph_summary (a quick file/edge count to confirm the repo is analyzable). Read-only and confined to the workspace directory you pick on install.",
+  "author": {
+    "name": "Shubham Prajapati",
+    "url": "https://github.com/shubham0086"
+  },
+  "homepage": "https://my-portfolio-github-io-beta-five.vercel.app/projects/agent-context.html",
+  "documentation": "https://github.com/shubham0086/agent-context#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shubham0086/agent-context"
+  },
+  "license": "MIT",
+  "keywords": ["mcp", "code-graph", "blast-radius", "dependency-graph", "ai-engineering", "machine-os"],
+  "server": {
+    "type": "node",
+    "entry_point": "mcp_server.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/mcp_server.js"],
+      "env": {
+        "GRAPHIFY_ROOT": "${user_config.workspace_dir}",
+        "MACHINE_OS_TIER": "local"
+      }
+    }
+  },
+  "user_config": {
+    "workspace_dir": {
+      "type": "directory",
+      "title": "Workspace root",
+      "description": "The repository the code-graph tools may analyze. Analysis is read-only and cannot escape this directory.",
+      "required": false
+    }
+  },
+  "tools": [
+    {
+      "name": "blast_radius",
+      "description": "Given a repo-relative file path, return its dependents (files that can break if it changes) and dependencies."
+    },
+    {
+      "name": "graph_summary",
+      "description": "Return a one-line structural summary of the repo dependency graph (file count, edge count)."
+    }
+  ],
+  "tools_generated": false,
+  "compatibility": {
+    "claude_desktop": ">=1.0.0",
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
