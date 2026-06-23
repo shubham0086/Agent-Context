@@ -1,17 +1,24 @@
-# Files excluded from the .mcpb bundle (the server code + production node_modules ship; the rest does not)
-tests/
-demo/
-docs/
-.git/
-.github/
-.gitignore
-.mcpbignore
+# Files excluded from the .mcpb bundle (the server code + production node_modules ship).
+#
+# IMPORTANT: directory patterns are ANCHORED with a leading "/" so they match ONLY the
+# project root and never descend into node_modules. An unanchored "dist/" here previously
+# stripped node_modules/@modelcontextprotocol/sdk/dist/ (the SDK's compiled code) during
+# `mcpb pack`, which made `import '@modelcontextprotocol/sdk/...'` fail and crashed the
+# server on startup ("Server disconnected"). node_modules must ship intact.
+/tests/
+/demo/
+/docs/
+/dist/
+/data/
+/.git/
+/.github/
+/.gitignore
+/.mcpbignore
+/.vscode/
+/.idea/
+# file patterns (safe to match anywhere; not load-bearing for deps)
 *.mcpb
-dist/
-data/
 *.db
 *.log
-.vscode/
-.idea/
 .DS_Store
 Thumbs.db
