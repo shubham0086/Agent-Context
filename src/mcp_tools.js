@@ -82,6 +82,7 @@ export const TOOLS = [
       },
       required: ['file'],
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   {
     name: 'graph_summary',
@@ -97,10 +98,30 @@ export const TOOLS = [
         },
       },
     },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  {
+    name: 'context_info',
+    description:
+      'Return this spoke\'s identity: server name, version, and the list of available tool names. ' +
+      'Read-only introspection with no side effects; use it to confirm what the server exposes.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
 ];
 
+// Spoke identity, surfaced by the context_info introspection tool. Kept in sync with package.json.
+export const SPOKE = { name: 'agent-context', version: '1.0.0' };
+
 export async function handleTool(name, args = {}) {
+  // Introspection short-circuits before any graph build: no client, no walk, no side effects.
+  if (name === 'context_info') {
+    return { name: SPOKE.name, version: SPOKE.version, tools: TOOLS.map((t) => t.name) };
+  }
+
   const client = clientFor(args.root); // throws on root escape, before any walk
 
   switch (name) {

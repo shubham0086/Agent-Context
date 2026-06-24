@@ -1,0 +1,20 @@
+{
+  "_comment": "Cross-runtime example for registering agent-context as a stdio MCP server. Copy the relevant block into your client config (Cursor, Cline, Codex, or any MCP client). Replace ABSOLUTE_PATH_TO_REPO with the full path to this repo on your machine, e.g. D:/dev/.../repos/02-solve/context/agent-context. This file is documentation only and does not affect any existing Claude config.",
+
+  "mcpServers": {
+    "agent-context": {
+      "command": "node",
+      "args": ["ABSOLUTE_PATH_TO_REPO/mcp_server.js"],
+      "env": {
+        "GRAPHIFY_ROOT": "ABSOLUTE_PATH_TO_THE_REPO_YOU_WANT_TO_ANALYZE"
+      }
+    }
+  },
+
+  "_cursor": "Cursor reads mcpServers from .cursor/mcp.json (project) or ~/.cursor/mcp.json (global). Paste the agent-context block above.",
+  "_cline": "Cline reads mcpServers from its MCP settings JSON (cline_mcp_settings.json). Paste the agent-context block above.",
+  "_codex": "Codex CLI reads MCP servers from ~/.codex/config.toml. The equivalent TOML is: [mcp_servers.agent-context] command = \"node\" args = [\"ABSOLUTE_PATH_TO_REPO/mcp_server.js\"]",
+
+  "_tools": "Exposes: blast_radius (dependents + dependencies of a file), graph_summary (file + edge counts), context_info (server name, version, tool list). All read-only.",
+  "_note": "GRAPHIFY_ROOT is optional. If omitted, the server analyzes the workspace it is launched in. A per-call root arg may narrow to a subdirectory but cannot escape the anchor."
+}

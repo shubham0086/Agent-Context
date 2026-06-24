@@ -25,13 +25,27 @@ function ok(name) {
 }
 
 // 1. Tool definitions are well-formed.
-assert.equal(TOOLS.length, 2, 'expected exactly 2 tools');
+assert.equal(TOOLS.length, 3, 'expected exactly 3 tools');
 assert.ok(
   TOOLS.every((t) => t.name && t.description && t.inputSchema && t.inputSchema.type === 'object'),
   'every tool needs name + description + object inputSchema'
 );
-assert.deepEqual(TOOLS.map((t) => t.name).sort(), ['blast_radius', 'graph_summary']);
-ok('exposes blast_radius + graph_summary with valid schemas');
+assert.deepEqual(TOOLS.map((t) => t.name).sort(), ['blast_radius', 'context_info', 'graph_summary']);
+ok('exposes blast_radius + graph_summary + context_info with valid schemas');
+
+// 1b. Every tool carries MCP annotation hints (read-only query surface).
+assert.ok(
+  TOOLS.every((t) => t.annotations && t.annotations.readOnlyHint === true && t.annotations.destructiveHint === false),
+  'every tool is annotated read-only + non-destructive'
+);
+ok('all tools carry read-only, non-destructive annotation hints');
+
+// 1c. context_info introspection: name, version, tool list; no graph build.
+const info = await handleTool('context_info', {});
+assert.equal(info.name, 'agent-context');
+assert.ok(info.version, 'reports a version');
+assert.deepEqual(info.tools.sort(), ['blast_radius', 'context_info', 'graph_summary']);
+ok(`context_info reports ${info.name}@${info.version} with ${info.tools.length} tools`);
 
 // 2. blast_radius finds real dependents of Graphify.js in this repo.
 const br = await handleTool('blast_radius', { file: 'src/Graphify.js', root: repoRoot });
