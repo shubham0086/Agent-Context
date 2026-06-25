@@ -34,6 +34,23 @@ console.log('\nTest 4: Graph caches on second call');
 const summary2 = await client.getGraphSummary();
 assert(summary2.nodeCount === summary.nodeCount, 'Graph is cached (same node count)');
 
+console.log('\nTest 5: Cache invalidates when a file changes (staleness check)');
+{
+  const fs = await import('fs/promises');
+  const tmpFile = path.join(repoRoot, 'tests', '__staleness_probe.js');
+  await fs.writeFile(tmpFile, '// probe v1, no imports\n');
+  const v1 = await client.getGraphSummary();
+  // Bump mtime + content so the fingerprint must change; v2 adds one import edge.
+  await new Promise((r) => setTimeout(r, 10));
+  await fs.writeFile(tmpFile, "import x from './nonexistent.js';\n// probe v2\n");
+  const v2 = await client.getGraphSummary();
+  assert(v2.edgeCount === v1.edgeCount + 1, 'Content change is detected (new edge, not stale)');
+  assert(v2.nodeCount === v1.nodeCount, 'Same file set after content-only change');
+  await fs.unlink(tmpFile);
+  const cleaned = await client.getGraphSummary();
+  assert(cleaned.nodeCount === v1.nodeCount - 1, 'Cache invalidates when a file is removed');
+}
+
 console.log(`\n${'─'.repeat(40)}`);
 console.log(`Tests passed: ${passed}`);
 console.log(`Tests failed: ${failed}`);

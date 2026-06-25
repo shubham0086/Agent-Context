@@ -15,20 +15,34 @@ export class GraphifyClient {
   constructor(projectRoot) {
     this.projectRoot = path.resolve(projectRoot);
     this.graphCache = null;
+    // Fingerprint of the file set + mtimes the cached graph was built from. Lets a
+    // long-lived server (MCP stdio session) detect that files changed and rebuild,
+    // instead of silently serving a stale blast radius. (Persistent-but-fresh: hold
+    // the parsed graph in memory, but re-validate cheaply before trusting it.)
+    this.graphFingerprint = null;
   }
 
   /**
    * Generates or loads the structural dependency graph for the workspace.
-   * Cached after first build.
+   *
+   * Two-phase so a long-lived process stays both fast and correct:
+   *   1. Walk the tree (cheap: stat only) → file list + a freshness fingerprint.
+   *   2. Read + parse each file (expensive) — skipped entirely when the fingerprint
+   *      matches the cached graph, so repeat queries reuse the parsed graph but a
+   *      changed file still forces a rebuild rather than returning stale edges.
    */
   async buildGraph() {
-    if (this.graphCache) return this.graphCache;
+    const analyzable = (await this._walkDir(this.projectRoot))
+      .filter((entry) => this._isAnalyzable(entry.path));
+    const fingerprint = this._fingerprint(analyzable);
+
+    // Cache hit: same files, same mtimes — the parsed graph is still valid.
+    if (this.graphCache && this.graphFingerprint === fingerprint) {
+      return this.graphCache;
+    }
 
     const graph = { nodes: {}, edges: [] };
-    const allFiles = await this._walkDir(this.projectRoot);
-
-    for (const file of allFiles) {
-      if (!this._isAnalyzable(file)) continue;
+    for (const { path: file } of analyzable) {
       const relPath = path.relative(this.projectRoot, file).replace(/\\/g, '/');
       try {
         const content = await fs.readFile(file, 'utf-8');
@@ -48,6 +62,7 @@ export class GraphifyClient {
     }
 
     this.graphCache = graph;
+    this.graphFingerprint = fingerprint;
     return graph;
   }
 
@@ -123,6 +138,8 @@ export class GraphifyClient {
 
   // --- Internal Helpers ---
 
+  // Walk the tree returning { path, mtimeMs } per file. mtime is collected during the
+  // same stat we already do, so the freshness fingerprint costs nothing extra.
   async _walkDir(dir, fileList = []) {
     const skipDirs = ['node_modules', '.git', 'dist', 'build', '.next', 'coverage', 'venv', '.venv', '__pycache__', '.pytest_cache'];
     const files = await fs.readdir(dir);
@@ -132,10 +149,20 @@ export class GraphifyClient {
       if (stat.isDirectory()) {
         if (!skipDirs.includes(file)) await this._walkDir(filePath, fileList);
       } else {
-        fileList.push(filePath);
+        fileList.push({ path: filePath, mtimeMs: stat.mtimeMs });
       }
     }
     return fileList;
+  }
+
+  // Cheap, order-independent signature of the analyzable file set. Changes whenever a
+  // file is added, removed, or modified — so a stale in-memory graph is detected before
+  // it's trusted. Sorted so directory-listing order can't produce false invalidations.
+  _fingerprint(entries) {
+    return entries
+      .map((e) => `${e.path.replace(/\\/g, '/')}:${e.mtimeMs}`)
+      .sort()
+      .join('|');
   }
 
   _isAnalyzable(filePath) {

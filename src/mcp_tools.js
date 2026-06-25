@@ -126,8 +126,24 @@ export async function handleTool(name, args = {}) {
 
   switch (name) {
     case 'blast_radius': {
-      if (!args.file) throw new Error('blast_radius requires "file"');
+      if (!args.file) {
+        throw new Error('blast_radius requires "file": a repo-relative path, e.g. "src/db.js".');
+      }
       const n = await withTimeout(client.queryNeighbors(args.file), 'blast_radius');
+      // Actionable empty result: an isolated file and a mistyped path look identical to
+      // the caller otherwise. Point the agent at graph_summary to disambiguate.
+      if (n.dependents.length === 0 && n.dependencies.length === 0) {
+        return {
+          target: n.target,
+          dependents: [],
+          dependencies: [],
+          dependentCount: 0,
+          dependencyCount: 0,
+          note:
+            `No edges found for "${args.file}". Either it is isolated, or the path is wrong ` +
+            `(must be repo-relative, e.g. "src/db.js"). Run graph_summary to confirm the repo is indexed.`,
+        };
+      }
       return {
         target: n.target,
         dependents: n.dependents,
