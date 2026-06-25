@@ -36,10 +36,16 @@ No install needed. Zero external dependencies.
 ## MCP Server (use it from your AI IDE)
 
 Agent-Context also ships as an **MCP server**, so an AI IDE (Claude Code, Cursor) can call its
-blast radius directly. It exposes two tools:
+blast radius directly. It exposes these tools (auto-generated from source — run
+`node scripts/gen-tool-docs.mjs` to regenerate after changes):
 
-- `blast_radius(file, root?)` : the dependents and dependencies of a file
-- `graph_summary(root?)` : file/edge counts, to confirm the repo is analyzable
+<!-- TOOLS-START -->
+| Tool | Description |
+|------|-------------|
+| `blast_radius(`file`, `root?`)` | Given a repo-relative file path, return its blast radius: the files that depend on it (dependents — these can break if it changes) and the files it depends on (dependencies). Call this before approving a change to see what it actually affects beyond the diff. |
+| `graph_summary(`root?`)` | Return a one-line structural summary of the repo dependency graph (file count, edge count). Use to confirm the codebase is analyzable before relying on blast_radius. |
+| `context_info()` | Return this spoke's identity: server name, version, and the list of available tool names. Read-only introspection with no side effects; use it to confirm what the server exposes. |
+<!-- TOOLS-END -->
 
 It is the **code-graph spoke** of [The Machine OS](https://github.com/shubham0086/the-machine-os):
 the `/code-review` and `/tech-debt` skills call it to see what a change actually affects beyond
