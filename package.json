@@ -1,0 +1,23 @@
+{
+  "name": "agent-context",
+  "version": "1.0.0",
+  "description": "Code-graph context and blast radius for AI agents — give your agent the 200 tokens it needs, not 8000 tokens of noise",
+  "type": "module",
+  "main": "src/Graphify.js",
+  "bin": { "agent-context": "mcp_server.js" },
+  "scripts": {
+    "test": "node tests/graphify.test.js",
+    "test:mcp": "node tests/mcp.test.js",
+    "start": "node mcp_server.js",
+    "docs:tools": "node scripts/gen-tool-docs.mjs",
+    "demo:graph": "node demo/graph.js .",
+    "demo:blast": "node demo/blast-radius.js src/Graphify.js ."
+  },
+  "keywords": ["ai", "agent", "context", "dependency", "graph", "blast-radius", "llm", "mcp"],
+  "author": "Shubham Prajapati",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": { "node": ">=18.0.0" }
+}
