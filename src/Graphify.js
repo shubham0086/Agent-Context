@@ -41,6 +41,16 @@ export class GraphifyClient {
       return this.graphCache;
     }
 
+    // Real file nodes (repo-relative, forward-slashed). Import targets are written
+    // WITHOUT an extension (a relative import './utils/redact' resolves to the
+    // string 'src/utils/redact'), but the actual node is 'src/utils/redact.js'.
+    // Resolving specifiers to real nodes here is what makes reverse edges
+    // (dependents) match — without it, "what depends on X" always returned 0.
+    const nodeSet = new Set(
+      analyzable.map(({ path: file }) =>
+        path.relative(this.projectRoot, file).replace(/\\/g, '/'))
+    );
+
     const graph = { nodes: {}, edges: [] };
     for (const { path: file } of analyzable) {
       const relPath = path.relative(this.projectRoot, file).replace(/\\/g, '/');
@@ -54,7 +64,9 @@ export class GraphifyClient {
         };
 
         for (const dep of deps) {
-          graph.edges.push({ from: relPath, to: dep });
+          // Unify 'utils/redact' with the real node 'utils/redact.js'.
+          // Unresolvable specifiers (npm packages, stdlib) stay raw.
+          graph.edges.push({ from: relPath, to: this._resolveToNode(dep, nodeSet) });
         }
       } catch (_) {
         // Skip unreadable files
@@ -78,13 +90,14 @@ export class GraphifyClient {
     const dependents = new Set();
     const dependencies = new Set();
 
+    // Edges now reference real file nodes, so compare on a bare key (extension
+    // stripped from both sides). This unifies 'utils/redact' with 'utils/redact.js'
+    // and tolerates a query that omits the extension, without the old endsWith
+    // fuzzy match that produced false positives across unrelated directories.
+    const targetKey = this._bareKey(normalizedTarget);
     for (const edge of graph.edges) {
-      if (edge.to === normalizedTarget || normalizedTarget.endsWith(edge.to) || edge.to.endsWith(normalizedTarget)) {
-        dependents.add(edge.from);
-      }
-      if (edge.from === normalizedTarget) {
-        dependencies.add(edge.to);
-      }
+      if (this._bareKey(edge.to) === targetKey) dependents.add(edge.from);
+      if (this._bareKey(edge.from) === targetKey) dependencies.add(edge.to);
     }
 
     return {
@@ -168,6 +181,34 @@ export class GraphifyClient {
   _isAnalyzable(filePath) {
     const validExts = ['.js', '.ts', '.jsx', '.tsx', '.py', '.go', '.mjs', '.cjs'];
     return validExts.includes(path.extname(filePath));
+  }
+
+  // Source extensions used for import resolution and bare-key comparison.
+  static get _EXTS() {
+    return ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.py', '.go'];
+  }
+
+  // Map an import specifier to a real graph node. Tries the bare specifier, each
+  // source extension, then a directory index file. Also handles Python dotted
+  // module names (utils.redact -> utils/redact). Returns the raw specifier when
+  // nothing matches (an external npm/stdlib dependency).
+  _resolveToNode(spec, nodeSet) {
+    if (nodeSet.has(spec)) return spec;
+    for (const ext of GraphifyClient._EXTS) if (nodeSet.has(spec + ext)) return spec + ext;
+    for (const ext of GraphifyClient._EXTS) if (nodeSet.has(spec + '/index' + ext)) return spec + '/index' + ext;
+    if (spec.includes('.') && !spec.includes('/')) {
+      const asPath = spec.replace(/\./g, '/');
+      if (nodeSet.has(asPath)) return asPath;
+      for (const ext of GraphifyClient._EXTS) if (nodeSet.has(asPath + ext)) return asPath + ext;
+    }
+    return spec;
+  }
+
+  // A path with any trailing source extension removed, so 'a/b.js' and 'a/b'
+  // compare equal. Full-path comparison (not endsWith) avoids false positives.
+  _bareKey(p) {
+    for (const ext of GraphifyClient._EXTS) if (p.endsWith(ext)) return p.slice(0, -ext.length);
+    return p;
   }
 
   _extractDependencies(content, currentPath) {

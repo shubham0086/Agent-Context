@@ -51,6 +51,25 @@ console.log('\nTest 5: Cache invalidates when a file changes (staleness check)')
   assert(cleaned.nodeCount === v1.nodeCount - 1, 'Cache invalidates when a file is removed');
 }
 
+console.log('\nTest 6: Dependents resolve across extensionless imports (reverse-edge bug)');
+{
+  const fs = await import('fs/promises');
+  const depFile = path.join(repoRoot, 'tests', '__br_dep.js');
+  const srcFile = path.join(repoRoot, 'tests', '__br_src.js');
+  await fs.writeFile(depFile, 'export const x = 1;\n');
+  // Extensionless require — the exact shape that previously returned 0 dependents.
+  await fs.writeFile(srcFile, "const { x } = require('./__br_dep');\n");
+  const n = await client.queryNeighbors('tests/__br_dep.js');
+  assert(n.dependents.includes('tests/__br_src.js'),
+    'dependents includes the extensionless importer (was 0 before the fix)');
+  // A query that omits the extension must also work.
+  const n2 = await client.queryNeighbors('tests/__br_dep');
+  assert(n2.dependents.includes('tests/__br_src.js'),
+    'dependents resolve even when the query omits the extension');
+  await fs.unlink(depFile);
+  await fs.unlink(srcFile);
+}
+
 console.log(`\n${'─'.repeat(40)}`);
 console.log(`Tests passed: ${passed}`);
 console.log(`Tests failed: ${failed}`);
