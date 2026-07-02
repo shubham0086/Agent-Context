@@ -216,8 +216,10 @@ export class GraphifyClient {
     const ext = path.extname(currentPath);
 
     if (ext === '.py') {
-      const pyImpRegex1 = /^\s*(?:import)\s+([a-zA-Z0-9_\.,\s]+)/gm;
-      const pyImpRegex2 = /^\s*from\s+([a-zA-Z0-9_\.]+)\s+import/gm;
+      // `\s` in the capture must NOT include newlines, or `import os` greedily
+      // eats the following lines (produced the noisy 'os\nfrom typing...' deps).
+      const pyImpRegex1 = /^[ \t]*(?:import)[ \t]+([a-zA-Z0-9_\., \t]+)/gm;
+      const pyImpRegex2 = /^[ \t]*from[ \t]+([a-zA-Z0-9_\.]+)[ \t]+import/gm;
 
       let match;
       while ((match = pyImpRegex1.exec(content)) !== null) {
@@ -240,9 +242,21 @@ export class GraphifyClient {
       }
     }
 
+    const dir = path.dirname(currentPath);
     const resolvedDeps = deps.map(d => {
+      // Python relative import: leading dots are PACKAGE levels, not path segments.
+      // One dot = current package (this dir); each extra dot = one parent up. The
+      // remainder is a dotted module path. `from .engine` -> 'src/engine', NOT
+      // 'src/.engine' (the bug the Phase 4 benchmark exposed).
+      if (ext === '.py' && d.startsWith('.')) {
+        const m = d.match(/^(\.+)(.*)$/);
+        let base = dir;
+        for (let i = 0; i < m[1].length - 1; i++) base = path.dirname(base);
+        const rest = m[2].replace(/\./g, '/');
+        return path.join(base, rest).replace(/\\/g, '/');
+      }
       if (d.startsWith('.')) {
-        return path.join(path.dirname(currentPath), d).replace(/\\/g, '/');
+        return path.join(dir, d).replace(/\\/g, '/');
       }
       return d;
     });

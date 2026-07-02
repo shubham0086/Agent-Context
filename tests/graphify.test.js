@@ -70,6 +70,21 @@ console.log('\nTest 6: Dependents resolve across extensionless imports (reverse-
   await fs.unlink(srcFile);
 }
 
+console.log('\nTest 7: Python relative imports resolve dependents (Phase 4 bug)');
+{
+  const fs = await import('fs/promises');
+  const depFile = path.join(repoRoot, 'tests', '__py_dep.py');
+  const srcFile = path.join(repoRoot, 'tests', '__py_src.py');
+  await fs.writeFile(depFile, 'X = 1\n');
+  // `from .module` is a Python RELATIVE import (dot = package, not path segment).
+  await fs.writeFile(srcFile, 'import os\nfrom .__py_dep import X\n');
+  const n = await client.queryNeighbors('tests/__py_dep.py');
+  assert(n.dependents.includes('tests/__py_src.py'),
+    'python relative importer resolves as a dependent (was src/.__py_dep before the fix)');
+  await fs.unlink(depFile);
+  await fs.unlink(srcFile);
+}
+
 console.log(`\n${'─'.repeat(40)}`);
 console.log(`Tests passed: ${passed}`);
 console.log(`Tests failed: ${failed}`);
